@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #2563eb; /* Professional Blue */
+  --color-background-light: #f8fafc; /* Very light slate */
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-background-light text-slate-900 antialiased;
+  }
+}

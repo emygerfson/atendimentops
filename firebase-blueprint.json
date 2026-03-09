@@ -1,0 +1,92 @@
+{
+  "entities": {
+    "Patient": {
+      "title": "Patient",
+      "description": "Informações cadastrais do paciente",
+      "type": "object",
+      "properties": {
+        "fullName": { "type": "string" },
+        "cpf": { "type": "string" },
+        "birthDate": { "type": "string", "format": "date" },
+        "insurance": { "type": "string", "enum": ["SUS", "Unimed", "Bradesco", "SulAmérica", "Particular"] },
+        "gender": { "type": "string", "enum": ["Masculino", "Feminino"] },
+        "mainSymptom": { "type": "string" },
+        "status": { "type": "string", "enum": ["Aguardando Triagem", "Em Triagem", "Aguardando Médico", "Em Consulta", "Aguardando Medicação", "Em Medicação", "Alta"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["fullName", "cpf", "birthDate", "insurance", "gender", "status", "createdAt"]
+    },
+    "Triage": {
+      "title": "Triage",
+      "description": "Dados da triagem de enfermagem",
+      "type": "object",
+      "properties": {
+        "patientId": { "type": "string" },
+        "bloodPressure": { "type": "string" },
+        "temperature": { "type": "number" },
+        "saturation": { "type": "number" },
+        "observations": { "type": "string" },
+        "riskLevel": { "type": "string", "enum": ["EMERGÊNCIA", "MUITO URGENTE", "URGENTE", "POUCO URGENTE", "NÃO URGENTE"] },
+        "nurseId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["patientId", "bloodPressure", "temperature", "saturation", "riskLevel", "createdAt"]
+    },
+    "Consultation": {
+      "title": "Consultation",
+      "description": "Registro de consulta médica",
+      "type": "object",
+      "properties": {
+        "patientId": { "type": "string" },
+        "mainComplaint": { "type": "string" },
+        "history": { "type": "string" },
+        "physicalExam": { "type": "string" },
+        "diagnosis": { "type": "string" },
+        "prescription": { "type": "array", "items": { "type": "object" } },
+        "doctorId": { "type": "string" },
+        "status": { "type": "string", "enum": ["Pendente", "Finalizada"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["patientId", "mainComplaint", "status", "createdAt"]
+    },
+    "MedicationAdministration": {
+      "title": "MedicationAdministration",
+      "description": "Registro de administração de medicamentos",
+      "type": "object",
+      "properties": {
+        "patientId": { "type": "string" },
+        "consultationId": { "type": "string" },
+        "medicationName": { "type": "string" },
+        "dosage": { "type": "string" },
+        "route": { "type": "string" },
+        "schedule": { "type": "string" },
+        "administered": { "type": "boolean" },
+        "nurseNotes": { "type": "string" },
+        "administeredAt": { "type": "string", "format": "date-time" },
+        "nurseId": { "type": "string" }
+      },
+      "required": ["patientId", "consultationId", "medicationName", "administered"]
+    },
+    "User": {
+      "title": "User",
+      "description": "Perfil de usuário do sistema",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "doctor", "nurse", "receptionist"] },
+        "crm": { "type": "string" },
+        "coren": { "type": "string" }
+      },
+      "required": ["uid", "name", "email", "role"]
+    }
+  },
+  "firestore": {
+    "/patients": { "schema": "Patient", "description": "Coleção de pacientes" },
+    "/triage": { "schema": "Triage", "description": "Coleção de triagens" },
+    "/consultations": { "schema": "Consultation", "description": "Coleção de consultas" },
+    "/medications": { "schema": "MedicationAdministration", "description": "Coleção de medicações" },
+    "/users": { "schema": "User", "description": "Coleção de usuários" }
+  }
+}

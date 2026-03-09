@@ -1,0 +1,88 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: patients
+    // Fields: fullName, cpf, birthDate, insurance, gender, mainSymptom, status, createdAt
+    //
+    // Collection: triage
+    // Fields: patientId, bloodPressure, temperature, saturation, observations, riskLevel, nurseId, createdAt
+    //
+    // Collection: consultations
+    // Fields: patientId, mainComplaint, history, physicalExam, diagnosis, prescription, doctorId, status, createdAt
+    //
+    // Collection: medications
+    // Fields: patientId, consultationId, medicationName, dosage, route, schedule, administered, nurseNotes, administeredAt, nurseId
+    //
+    // Collection: users
+    // Fields: uid, name, email, role, crm, coren
+    //
+    // ===============================================================
+
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && (
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+        (request.auth.token.email == "emy.silva1404@gmail.com" && request.auth.token.email_verified == true)
+      );
+    }
+
+    function isStaff() {
+      return isAuthenticated() && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function isValidPatient(data) {
+      return data.fullName is string && data.fullName.size() > 0 && data.fullName.size() < 200 &&
+             data.cpf is string && data.cpf.size() >= 11 &&
+             data.status in ["Aguardando Triagem", "Em Triagem", "Aguardando Médico", "Em Consulta", "Aguardando Medicação", "Em Medicação", "Alta"];
+    }
+
+    function isValidTriage(data) {
+      return data.patientId is string &&
+             data.bloodPressure is string &&
+             data.temperature is number &&
+             data.saturation is number &&
+             data.riskLevel in ["EMERGÊNCIA", "MUITO URGENTE", "URGENTE", "POUCO URGENTE", "NÃO URGENTE"];
+    }
+
+    // Rules
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.auth.uid == userId && 
+                    request.resource.data.role in ['admin', 'doctor', 'nurse', 'receptionist'];
+      allow update: if isAdmin() || (isAuthenticated() && request.auth.uid == userId && request.resource.data.role == resource.data.role);
+    }
+
+    match /patients/{patientId} {
+      allow read: if isStaff();
+      allow create: if isStaff() && isValidPatient(request.resource.data);
+      allow update: if isStaff() && isValidPatient(request.resource.data);
+    }
+
+    match /triage/{triageId} {
+      allow read: if isStaff();
+      allow create: if isStaff() && isValidTriage(request.resource.data);
+      allow update: if isStaff() && isValidTriage(request.resource.data);
+    }
+
+    match /consultations/{consultationId} {
+      allow read: if isStaff();
+      allow create: if isStaff();
+      allow update: if isStaff();
+    }
+
+    match /medications/{medicationId} {
+      allow read: if isStaff();
+      allow create: if isStaff();
+      allow update: if isStaff();
+    }
+  }
+}
